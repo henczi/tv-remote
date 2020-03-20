@@ -1,10 +1,14 @@
 <script>
+	import AspectRatio from './components/AspectRatio.svelte';
 	export let name;
 </script>
 
 <main>
 	<h1>Hello {name}!</h1>
 	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
+	<AspectRatio ratio={5/2}>
+		<div style="width: 100%; height: 100%; background-color: red;"></div>
+	</AspectRatio>
 </main>
 
 <style>

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>LG TV Remote</title>
+<style>
+html, body{
+	margin:0;
+	padding:0;
+}
+hr{
+	margin: 25px 0;
+}
+div.container{
+	display:inline-block;
+}
+#connection-bar{
+	background-color:#aeaeae;
+	padding:10px;
+}
+#main{
+	margin:10px;
+}
+</style>
+</head>
+<body>
+	<div id="connection-bar">
+		<span style="font-family:Helvetica; font-weight:bold; margin-right:50px;"> LG TV Remote </span>
+		<label for="ip">ip or name</label>
+		<input id="ip" type="text" size="16" placeholder="IP address" value="" ></input>
+		<label for="api-key">api key</label>
+		<input id="api-key" type="text" size="32" placeholder="Api key" value="" ></input>
+		<input id="connect-btn" type="button" onclick="connectDisconnect()" value="Connect/Disconnect"></input>
+		<label>state: </label>
+		<label id="connection-state">Disconnected!</label>
+	</div>
+	<div id="main">
+		<div>
+			<div class="container">
+				<input type="button" value="chUP" onclick="channelUp()"></input>
+				<input type="button" value="chDOWN" onclick="channelDown()"></input>
+				<input type="button" value="volUP" onclick="volumeUp()"></input>
+				<input type="button" value="volDOWN" onclick="volumeDown()"></input>
+				<input type="range" min="0" max="100" step="1" value="20" onchange="setVolume(this.value)"></input>(not refreshing)
+				| | | |
+				<input type="button" value="TV" onclick="launch('com.webos.app.livetv')"></input>
+				<input type="button" value="Browser" onclick="launch('com.webos.app.browser')"></input>
+				<input type="button" value="YouTube" onclick="launch('youtube.leanback.v4')"></input>
+			</div>
+			<hr>
+			<div class="container">
+				<label>Channels: </label>
+				<input type="button" value="get" onclick="channelSelectorGET()"></input>
+				<select id="tv-ch-sel" style="width:160px;"></select>
+				<input type="button" value="set" onclick="channelSelectorSET()"></input>
+				<script>
+					function channelSelectorCBhandler(jsondata){
+						channels = jsondata.channelList;
+						var sel = document.getElementById('tv-ch-sel');
+						for(var i = 0; i < channels.length; i++){
+							var opt = document.createElement('option');
+							opt.innerHTML = channels[i].channelName;
+							opt.value = channels[i].channelId;
+							sel.appendChild(opt);
+						}
+					}
+					function channelSelectorGET(){
+						getChannelList(channelSelectorCBhandler);
+					}
+					function channelSelectorSET(){
+						var sel = document.getElementById('tv-ch-sel');
+						var selected = sel.value;
+						if(selected != "")
+							openChannel(selected);
+					}
+				</script>
+			</div>
+			| |
+			<div class="container">
+				<label>Apps: </label>
+				<input type="button" value="get" onclick="launchAppSelectorGET()"></input>
+				<select id="launch-app-sel" style="width:160px;"></select>
+				<input type="button" value="set" onclick="launchAppSelectorSET()"></input>
+				<script>
+					function launchAppSelectorCBhandler(jsondata){
+						lps = jsondata.launchPoints;
+						var sel = document.getElementById('launch-app-sel');
+						for(var i = 0; i < lps.length; i++){
+							var opt = document.createElement('option');
+							opt.innerHTML = lps[i].title;
+							opt.value = lps[i].id;
+							sel.appendChild(opt);
+						}
+					}
+					function launchAppSelectorGET(){
+						getListLaunchPoints(launchAppSelectorCBhandler);
+					}
+					function launchAppSelectorSET(){
+						var sel = document.getElementById('launch-app-sel');
+						var selected = sel.value;
+						if(selected != "")
+							launch(selected);
+					}
+				</script>
+			</div>
+			| |
+			<div class="container">
+				<label for="toast-message">Notification: </label>
+				<input id="toast-message" type="text" placeholder="message"></input>
+				<input type="button" value="Send" onclick="createToast(document.getElementById('toast-message').value)"></input>
+			</div>
+			| |
+			<div class="container">
+				<label for="open-browser">Open in browser: </label>
+				<input id="open-browser" type="text" placeholder="url"></input>
+				<input type="button" value="Send" onclick="launchBrowser(document.getElementById('open-browser').value)"></input>
+			</div>
+			<hr>
+			<div class="container">
+				<label>Keyboard: </label>
+				<input id="keyboard-input" type="text" size="32" placeholder="text"></input>
+				<script>
+					var keyboardInput = document.getElementById('keyboard-input');
+					keyboardInput.addEventListener("keydown", function(e){
+						if(e.keyCode == 13){/*Enter*/
+							sendText(keyboardInput.value);
+							/*TODO: Not perfect*/
+							setTimeout(sendEnter, 1500);
+						}
+						else if(e.keyCode == 8){/*Backspace*/
+							if(keyboardInput.value.length == 0)
+								sendDelete(1);
+						}
+					});
+				</script>
+			</div>
+			<hr>
+			<div class="container">
+				<input type="button" value="Connect" onclick="getPointerInputSocket()"></input>
+				| |
+				<label>Mouse: </label>
+				<button id="mouse-pad" style="width:30px; background:black; outline:none;">O</button>
+				| | | |
+				<label>Buttons: </label>
+				<input type="button" value="HOME" onclick="button(this.value)"></input>
+				<input type="button" value="BACK" onclick="button(this.value)"></input>
+				| |
+				<input type="button" value="UP" onclick="button(this.value)"></input>
+				<input type="button" value="DOWN" onclick="button(this.value)"></input>
+				<input type="button" value="LEFT" onclick="button(this.value)"></input>
+				<input type="button" value="RIGHT" onclick="button(this.value)"></input>
+				| |
+				<input type="button" value="RED" style="background:red" onclick="button(this.value)"></input>
+				<input type="button" value="BLUE" style="background:blue" onclick="button(this.value)"></input>
+				<input type="button" value="YELLOW" style="background:yellow" onclick="button(this.value)"></input>
+				<input type="button" value="GREEN" style="background:green" onclick="button(this.value)"></input>
+				| |
+				<input type="button" value="0" onclick="button(this.value)"></input>
+				<input type="button" value="1" onclick="button(this.value)"></input>
+				<input type="button" value="2" onclick="button(this.value)"></input>
+				<input type="button" value="3" onclick="button(this.value)"></input>
+				<input type="button" value="4" onclick="button(this.value)"></input>
+				<input type="button" value="5" onclick="button(this.value)"></input>
+				<input type="button" value="6" onclick="button(this.value)"></input>
+				<input type="button" value="7" onclick="button(this.value)"></input>
+				<input type="button" value="8" onclick="button(this.value)"></input>
+				<input type="button" value="9" onclick="button(this.value)"></input>
+				<!--<input type="button" value="DASH" onclick="button(10)"></input>-->
+				<!--<input type="button" value="ENTER" onclick="button(11)"></input>-->
+				<input type="button" value="ENTER" onclick="button(this.value)"></input>
+				<script>
+					var mousepad = document.getElementById('mouse-pad');
+					mousepad.requestPointerLock = mousepad.requestPointerLock || mousepad.mozRequestPointerLock;
+					document.exitPointerLock  = document.exitPointerLock || document.mozExitPointerLock;
+					mousepad.onclick = function() {
+						mousepad.requestPointerLock();
+					};
+					document.addEventListener('pointerlockchange', lockChangeAlert, false);
+					document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
+					
+					document.addEventListener("mousemove", updatePosition, false);
+					document.addEventListener("mousedown", updateMouseDown, false);
+					document.addEventListener("mouseup", updateMouseUp, false);
+					document.addEventListener("mousewheel", updateMouseWheel, false);
+					document.addEventListener("keydown", handleKeydown, false);
+					document.addEventListener("click", fireClick, false);
+					
+					var isLocked = false;
+					
+					function lockChangeAlert() {
+						if (document.pointerLockElement === mousepad ||
+							  document.mozPointerLockElement === mousepad) {
+							console.log('The pointer lock status is now locked');
+							isLocked = true;
+						} else {
+							console.log('The pointer lock status is now unlocked');  
+							isLocked = false;
+						}
+					}
+					var mdown = false;
+					function updatePosition(e) {
+						if(!isLocked)
+							return;
+						dx = e.movementX;
+						dy = e.movementY;
+						move(dx, dy, mdown);
+					}
+					function updateMouseDown(e) {
+						mdown = true;
+					}
+					function updateMouseUp(e) {
+						mdown = false;
+					}
+					function updateMouseWheel(e) {
+						if(!isLocked)
+							return;
+						var sdx = -e.deltaX;
+						var sdy = -e.deltaY; 
+						scroll(sdx,sdy);
+					}
+					function handleKeydown(e) {
+						if(!isLocked)
+							return;
+						var sdx = 0;
+						var sdy = 0; 
+						if (e.keyCode == 38){
+							sdy = 100;
+						}else if (e.keyCode == 39){
+							sdx = -100;
+						}else if (e.keyCode == 40){
+							sdy = -100;
+						}else if (e.keyCode == 37){
+							sdx = 100;
+						}
+						scroll(sdx,sdy);
+					}
+					function fireClick(e) {
+						if(!isLocked)
+							return;
+						clickM();
+					}
+				</script>
+			</div>
+			<hr>
+			<div class="container">
+				<label>Get program info: </label>
+				<input type="button" value="get actual" onclick="programInfoGET()"></input>
+				<input type="button" value="get selected" onclick="programInfoGETselected()"></input>
+				<br><br>
+				<textarea id="program-info-area" style="width:960px; height:240px;"></textarea>
+				<script>
+					function programInfoCBhandler(jsondata){
+						var contentText = "";
+						programs = jsondata.programList;
+						contentText += jsondata.channel.channelName + "\n\n";
+						for(var i = 0; i < programs.length; i++){
+							var program = programs[i];
+							contentText += program.localStartTime + " -- " + program.localEndTime + "\n";
+							contentText += program.programName + "\n";
+							contentText += (program.duration/60) + " perc" + "\n";
+							contentText += program.genre + "\n";
+							contentText += program.description + "\n";
+							if(typeof program.extendedDescription != "undefined")
+								contentText += program.extendedDescription
+													.map(function(x){return x.extendedText;})
+													.reduce(function(x,y){return x+y;});
+							contentText += "\n\n";
+						}
+						document.getElementById('program-info-area').textContent = contentText;
+					}
+					function programInfoGET(){
+						getChannelProgramInfo(programInfoCBhandler);
+					}
+					function programInfoGETselected(){
+						var sel = document.getElementById('tv-ch-sel');
+						var selected = sel.value;
+						if(selected != "")
+							getChannelProgramInfo(programInfoCBhandler, selected);
+					}
+				</script>
+			</div>
+		</div>
+	</div>
+	<div id="notification-bar" style="position:fixed; bottom:0; left:0; margin:0 10px;">
+	</div>
+	<script>
+		var notificationBar = document.getElementById('notification-bar');
+		function createNotification(textHTML){
+			var notif = document.createElement('p');
+			notif.innerHTML = textHTML;
+			notif.style.padding = "5px";
+			notif.style.color = "red";
+			notif.style.backgroundColor = "#0e0e0e";
+			notificationBar.appendChild(notif);
+			setTimeout(function(){notificationBar.removeChild(notif)}, 3000);
+		}
+	</script>
+<script>
+var ws;
+var wsmouse;
+var cmdBinding = {};
+var ipaddr = document.getElementById('ip');
+var apikey = document.getElementById('api-key');
+var connst = document.getElementById('connection-state');
+function connect(){
+	ws = new WebSocket("ws://"+ipaddr.value+":3000");
+	connst.textContent = "Connecting...";
+	ws.onopen = function(){
+		console.log("Socket open.");
+		connst.textContent = "Connected!";
+		register();
+	};
+	ws.onclose = function(){
+		console.log("Socket closed.");
+		connst.textContent = "Disconnected!";
+	};
+	ws.onerror = function(){
+		connst.textContent = "Disconnected!";
+		ws.close();
+	};
+	ws.onmessage = messageHandler;
+}
+function connectMouse(socketPath){
+	wsmouse = new WebSocket(socketPath);
+	wsmouse.onopen = function(){
+		console.log("Pointer socket open.");
+	};
+	wsmouse.onclose = function(){
+		console.log("Pointer socket closed.");
+	};
+	wsmouse.onerror = function(){
+		wsmouse.close();
+	};
+	wsmouse.onmessage = console.log;
+}
+function connectDisconnect(){
+	if(typeof ws == "undefined" 
+	|| ws.readyState == ws.CLOSED 
+	|| ws.readyState == ws.CLOSING){
+		/*CONNECT*/
+		connect();
+	}
+	else{
+		if(ws.readyState == ws.OPEN
+		|| ws.readyState == ws.CONNECTING){
+			/*DISCONNECT*/
+			if(typeof wsmouse != "undefined")
+				wsmouse.close();
+			ws.close();
+		}
+	}
+}
+
+function send(data){
+	if(typeof ws != "undefined" && ws.readyState == ws.OPEN)
+		ws.send(data);
+}
+function sendmouse(data){
+	if(typeof wsmouse != "undefined" && wsmouse.readyState == wsmouse.OPEN)
+		wsmouse.send(data);
+}
+
+function register(){
+	send('{"id":"1","payload":{"manifest":{"permissions":["READ_CURRENT_CHANNEL","CONTROL_INPUT_TV","SEARCH","CONTROL_DISPLAY","READ_INSTALLED_APPS","LAUNCH","READ_TV_CHANNEL_LIST","CONTROL_MOUSE_AND_KEYBOARD","CONTROL_INPUT_TEXT","CONTROL_INPUT_JOYSTICK","CONTROL_AUDIO","CONTROL_POWER","WRITE_NOTIFICATION_TOAST"]},"client-key":"'+apikey.value+'"},"type":"register"}');
+}
+
+function getPointerInputSocket(){
+	send('{"id":"2", "type":"request", "uri":"ssap://com.webos.service.networkinput/getPointerInputSocket"}');
+}
+
+function registerRemoteKeyboard(){
+	send('{"id":"Keyboard", "type":"subscribe", "uri":"ssap://com.webos.service.ime/registerRemoteKeyboard"}');
+}
+
+
+
+/*----*/
+
+function messageHandler(msg){
+	console.log(msg);
+	var jsonData = JSON.parse(msg.data);
+	if(jsonData.type == "error"){
+		/*//error handling*/
+		createNotification("ERROR: " + jsonData.error + "<br>" + jsonData.payload.errorText);
+	}
+	else{
+		if(typeof jsonData.id != "undefined"){
+			if(typeof cmdBinding[jsonData.id] != "undefined"){
+				cmdBinding[jsonData.id](jsonData.payload);
+			}else{
+				if(jsonData.id == "1"){
+					if(jsonData.type == "response"){
+						alert("Pairing: " + jsonData.payload.pairingType);
+					}else{
+						
+						/*//registerRemoteKeyboard();*/
+					}
+				}else if(jsonData.id == "2"){
+					if(jsonData.type == "response"){
+						connectMouse(jsonData.payload.socketPath);
+					}
+				}
+			}
+		}
+	}
+}
+
+/*----*/
+
+function channelUp(){
+	send('{"type":"request", "uri":"ssap://tv/channelUp"}');
+}
+function channelDown(){
+	send('{"type":"request", "uri":"ssap://tv/channelDown"}');
+}
+function volumeUp(){
+	send('{"type":"request", "uri":"ssap://audio/volumeUp"}');
+}
+function volumeDown(){
+	send('{"type":"request", "uri":"ssap://audio/volumeDown"}');
+}
+function setVolume(value){
+	send('{"type":"request", "uri":"ssap://audio/setVolume", "payload":{"volume":'+value+'}}');
+}
+function getChannelList(callback){
+	var cID = "channelList";
+	cmdBinding[cID] = callback;
+	send('{"id":"'+cID+'","type":"request","uri":"ssap://tv/getChannelList"}');
+}
+function openChannel(id){
+	send('{"type":"request","uri":"ssap://tv/openChannel","payload":{"channelId":"'+id+'"}}');
+}
+function getChannelProgramInfo(callback, channelId){
+	var cpiID = "ChannelProgramInfo";
+	cmdBinding[cpiID] = callback;
+	send('{"type":"request", "id":"'+cpiID+'", "uri":"ssap://tv/getChannelProgramInfo"'+
+		((typeof channelId != "undefined") ? ', "payload":{"channelId":"'+channelId+'"}' : '')+'}');
+}
+
+/*TODO: clickable url/app, icon*/
+function createToast(message){
+	send('{"type":"request","uri":"ssap://system.notifications/createToast","payload":{"message":"'+message+'"}}');
+}
+
+function launchBrowser(url){
+	send('{"type":"request","uri":"ssap://system.launcher/open","payload":{"target":"'+url+'"}}');
+}
+
+function getListLaunchPoints(callback){
+	var llpID = "launchPoints";
+	cmdBinding[llpID] = callback;
+	send('{"id":"'+llpID+'","type":"request","uri":"ssap://com.webos.applicationManager/listLaunchPoints"}');
+}
+/*TODO: contentId, params*/
+function launch(appId){
+	send('{"type":"request","uri":"ssap://system.launcher/launch","payload":{"id":"'+appId+'"}}');
+}
+
+function sendText(text){
+	send('{"type":"request","uri":"ssap://com.webos.service.ime/insertText","payload":{"text":"'+text+'", "replace":0}}');
+}
+function sendEnter(){
+	send('{"type":"request","uri":"ssap://com.webos.service.ime/sendEnterKey"}');
+}
+function sendDelete(count){
+	send('{"type":"request","uri":"ssap://com.webos.service.ime/deleteCharacters","payload":{"count":'+count+'}}');
+}
+/*----*/
+function clickM(){
+	sendmouse("type:click\n" + "\n");
+}
+function button(keyName){
+	sendmouse("type:button\n" + "name:" + keyName + "\n" + "\n");
+}
+function move(dx,dy,drag){
+	if(typeof drag == "undefined")
+		drag = false;
+	sendmouse("type:move\n" + "dx:" + dx + "\n" + "dy:" + dy + "\n" + "down:" + (drag ? 1 : 0) + "\n" + "\n");
+}
+function scroll(dx,dy){
+	sendmouse("type:scroll\n" + "dx:" + dx + "\n" + "dy:" + dy + "\n" + "\n");
+}
+</script>
+<script>
+
+</script>
+</body>
+</html>

@@ -1,8 +1,12 @@
+const fs = require('fs-extra');
+const path = require('path');
 import svelte from 'rollup-plugin-svelte';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
+import postcss from 'rollup-plugin-postcss';
+import postcssUrl from 'postcss-url';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -20,9 +24,29 @@ export default {
 			dev: !production,
 			// we'll extract any component CSS out into
 			// a separate file - better for performance
-			css: css => {
-				css.write('public/build/bundle.css');
-			}
+			// css: css => {
+			// 	css.write('public/build/bundle.css');
+			// }
+			emitCss: true // emit to postcss
+		}),
+		postcss({
+			extract: true,
+			plugins: [
+				postcssUrl([
+					// copy font files
+					{
+						filter: /\.(woff|woff2|eot|ttf)$/,
+						url: (asset) => {
+							const assetAbsolutePath = asset.absolutePath;
+							const fileName = path.basename(assetAbsolutePath);
+							const destpath = path.join(__dirname, 'public', 'build', 'fonts', fileName);
+							if (!fs.pathExistsSync(destpath))
+								fs.copySync(assetAbsolutePath, destpath)
+							return `/build/fonts/${fileName}`
+						},
+					}
+				]),
+			]
 		}),
 
 		// If you have external dependencies installed from

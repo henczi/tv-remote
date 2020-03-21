@@ -1,0 +1,10 @@
+{
+  "name": "LG remote",
+  "short_name": "LG remote",
+  "theme_color": "#f5f5f8",
+  "display": "standalone",
+  "start_url": ".",
+  "icons": [
+  ],
+  "splash_pages": null
+}

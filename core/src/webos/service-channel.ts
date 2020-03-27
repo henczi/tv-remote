@@ -1,33 +1,56 @@
-import { WSChannel } from "./channel";
+import { WSChannel, WSChannelListener } from "./channel";
 import { pairingTypeString, PairingType } from "./models/pairing-type";
 import { defaultPermissions } from "./models/permissions";
 import { WSChannelState } from "./models/channel-state";
 
+export interface MessageHandler {
+  (response: ServerMessage, context?: MessageContext): void;
+}
+
+export interface MessageContext {
+  request: ClientMessage;
+  handler: MessageHandler;
+}
+
+export interface ClientMessage {
+  type: "hello" | "register" | "request" | "subscribe" | "unsubscribe" | "p2p";
+  id?: string;
+  uri?: string;
+  payload?: object;
+}
+
+export interface ServerMessage {
+  type: "error" | "hello" | "registered" | "response" | "p2p";
+  id?: string;
+  payload?: any;
+  error?: string;
+}
+
 export class ServiceWSChannel extends WSChannel {
   nextRequestId = 1;
-  requestsMap: { [id: string]: { request: object, handler: (response: object) => void } } = {};
+  messageContextMap: { [id: string]: MessageContext } = {};
 
-  constructor() {
-    super();
+  constructor(protected listener?: WSChannelListener) {
+    super(listener);
   }
 
   private createRequestId() { return (this.nextRequestId++).toString(); }
 
-  private createRequest(request: { type: string, id?: string, uri?: string, payload?: object }, handler: () => void) {
+  private createRequest(request: ClientMessage, handler?: MessageHandler) {
     if (handler) {
       const id = this.createRequestId();
       request[id] = id;
-      this.requestsMap[id] = {
+      this.messageContextMap[id] = {
         request,
-        handler: (response) => console.log('req handler: ', response)
+        handler
       }
       // timout - remove handler
-      // if (request.type !== 'subscribe') setTimeout(() => delete this.requestsMap[id], 3000);
+      // if (request.type !== 'subscribe') setTimeout(() => delete this.messageContextMap[id], 3000);
     }
     this.send(JSON.stringify(request));
   }
 
-  register(pairingType: PairingType = PairingType.Prompt, clientKey?: string) {
+  register(pairingType: PairingType, clientKey: string, handler: MessageHandler) {
     this.createRequest({
       type: 'register',
       payload: {
@@ -37,48 +60,70 @@ export class ServiceWSChannel extends WSChannel {
           permissions: defaultPermissions
         }
       }
-    }, console.log);
+    }, handler);
   }
 
   registerPin(pin: string) {
-    // get ID
+    this.request('ssap://pairing/setPin', { pin });
   }
 
-  request(uri: string, payload?: object) {
-    this.createRequest({
-      type: 'request',
-      uri,
-      payload
-    }, console.log);
+  getPointerInputSocket(handler: MessageHandler) {
+    this.request('ssap://com.webos.service.networkinput/getPointerInputSocket', undefined, handler);
+  }
+
+  request(uri: string, payload: object, handler?: MessageHandler) {
+    this.createRequest({ type: 'request', uri, payload }, handler);
   }
 
   // return subscription?
-  subscibe(uri: string, /* handler */) {
-    this.createRequest({
-      type: 'subscribe',
-      uri,
-    }, console.log);
+  subscibe(uri: string, handler: MessageHandler) {
+    this.createRequest({ type: 'subscribe', uri }, handler);
   }
 
-  unsubscribe(uri: string, /* handler */) {
+  unsubscribe(uri: string, handler: MessageHandler) {
     // find id?
-    this.createRequest({
-      type: 'unsubscribe',
-      uri,
-    }, console.log);
+    this.createRequest({ type: 'unsubscribe', uri }, handler);
   }
 
-  stateChangeEvent(newState: WSChannelState) {
+  handleMessage(raw: string) {
+    const message = JSON.parse(raw) as ServerMessage;
+    const messageContext = message.id && this.messageContextMap[message.id] || undefined;
+    switch (message.type) {
+      case "error":
+        this.listener?.onError({ message: message.error, context: messageContext });
+        if (messageContext) {
+          delete this.messageContextMap[message.id];
+        }
+        break;
+      case "response":
+        if (messageContext) {
+          if (messageContext.handler)
+            messageContext.handler(message)
+          if (messageContext.request.type !== "subscribe" && messageContext.request.type !== "register")
+            delete this.messageContextMap[message.id];
+        }
+        break;
+      case "registered":
+        if (messageContext) {
+          delete this.messageContextMap[message.id];
+        }
+        break;
+      default:
+        console.log('Unhandled message', message);
+        break;
+    }
+  }
+
+  protected stateChangeEvent(newState: WSChannelState) {
     super.stateChangeEvent(newState);
-    console.log('state changed', newState);
   }
 
-  messageEvent(m: any) {
+  protected messageEvent(m: any) {
     super.messageEvent(m);
-    console.log('message', m)
+    this.handleMessage(m);
   }
 
-  reset() {
+  protected reset() {
     super.reset();
     this.nextRequestId = 1;
   }

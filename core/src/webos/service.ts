@@ -1,22 +1,29 @@
-import { ClientKeyStore } from "./keystore";
 import { PairingType } from "./models/pairing-type";
-import { ServiceWSChannel } from "./service-channel";
-import { MouseWSChannel } from "./mouse-channel";
+import { ServiceWSChannel, MessageHandler } from "./service-channel";
+import { MouseWSChannel, MouseInterface } from "./mouse-channel";
 
 export interface DeviceServiceListener {
-  onConnected: () => void;
-  onPairing: (pairingType: PairingType) => void;
-  onRegistered: () => void;
-  onError: (error: any) => void;
+  onConnected?: () => void;
+  onDisconnected?: () => void;
+  onPairing?: (pairingType: PairingType, setPin: (pin: string) => void) => void;
+  onRegistered?: (clientKey?: string) => void;
+  onError?: (error: any) => void;
 }
 
 export class DeviceService {
   private listener: DeviceServiceListener;
-  private keyStore = new ClientKeyStore('LG_WEBOS_CLIENT_KEYS');
-  private serviceChannel = new ServiceWSChannel();
-  private mouseChannel = new MouseWSChannel();
+  private serviceChannel = new ServiceWSChannel({
+    onConnected: () => this.listener?.onConnected(),
+    onClosed: () => this.listener?.onDisconnected(),
+    onError: (error) => this.listener?.onError(error),
+  });
+  private mouseChannel = new MouseWSChannel({
+    onError: (error) => this.listener?.onError(error),
+  });
 
   get connectionState() { return this.serviceChannel.state; }
+
+  get mouse(): MouseInterface { return this.mouseChannel; }
 
   constructor(_listener: DeviceServiceListener) {
     this.listener = _listener;
@@ -26,13 +33,32 @@ export class DeviceService {
     this.serviceChannel.connect(uri);
   }
 
-  register(pairingType: PairingType = PairingType.Prompt, clientKey?: string) {
-    this.serviceChannel.register(pairingType, clientKey);
+  register(pairingType: PairingType, clientKey: string) {
+    // pin, response
+    this.serviceChannel.register(pairingType, clientKey, (response) => {
+      if (response.payload.pairingType != null) {
+        this.listener.onPairing(response.payload.pairingType, (pin) => {
+          this.serviceChannel.registerPin(pin);
+        });
+      } else {
+        this.listener.onRegistered();
+      }
+    });
+  }
+
+  connectMouse() {
+    this.serviceChannel.getPointerInputSocket((response) => {
+      this.mouseChannel.connect(response.payload.socketPath);
+    })
+  }
+
+  disconnectMouse() {
+    this.mouseChannel.disconnect();
   }
 
   disconnect() {
-    if (this.serviceChannel) this.serviceChannel.disconnect();
-    if (this.mouseChannel) this.mouseChannel.disconnect();
+    this.serviceChannel.disconnect();
+    this.mouseChannel.disconnect();
   }
   
 }

@@ -2,6 +2,12 @@ import { WSChannelState } from "./models/channel-state";
 
 const WSImpl: typeof WebSocket = WebSocket;
 
+export interface WSChannelListener {
+  onConnected?: () => void;
+  onClosed?: () => void;
+  onError?: (error?: any) => void;
+}
+
 export abstract class WSChannel {
   private _hostUri: string = '';
   private _ws: WebSocket | null = null;
@@ -11,18 +17,20 @@ export abstract class WSChannel {
     return this._state;
   }
 
-  constructor() { }
+  constructor(private _listener: WSChannelListener) { }
 
-  stateChangeEvent(newState: WSChannelState) {
+  protected stateChangeEvent(newState: WSChannelState) {
+    console.log('newState: ', newState)
     this._state = newState;
   }
 
-  messageEvent(m: any) { 
+  protected messageEvent(m: any) { 
     console.log('message: ', m)
   }
 
   send(message: string) {
-    this._ws && this._ws.send(message);
+    if (!this._ws) throw new Error('no socket');
+    this._ws.send(message);
   }
 
   connect(uri: string) {
@@ -30,9 +38,9 @@ export abstract class WSChannel {
     this.disconnect();
     this._ws = new WSImpl(this._hostUri);
     this.stateChangeEvent(WSChannelState.Connecting);
-    this._ws.addEventListener('open', () => this.stateChangeEvent(WSChannelState.Connected));
-    this._ws.addEventListener('close', () => this.disconnect());
-    this._ws.addEventListener('error', () => this.disconnect());
+    this._ws.addEventListener('open', () => (this.stateChangeEvent(WSChannelState.Connected), this._listener?.onConnected()));
+    this._ws.addEventListener('close', () => (this.disconnect(), this._listener?.onClosed()));
+    this._ws.addEventListener('error', () => (this.disconnect(), this._listener?.onError()));
     this._ws.addEventListener('message', (m) => this.messageEvent(m));
   }
 
@@ -48,5 +56,5 @@ export abstract class WSChannel {
     this._ws = null;
   }
 
-  reset() {};
+  protected reset() {};
 }

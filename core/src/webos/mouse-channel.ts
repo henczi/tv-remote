@@ -1,23 +1,30 @@
-import { WSChannel } from "./channel";
+import { WSChannel, WSChannelListener } from "./channel";
 import { WSChannelState } from "./models/channel-state";
 
-export class MouseWSChannel extends WSChannel {
+export interface MouseInterface {
+  click(): void;
+  button(keyName: string): void;
+  move(dx: number, dy: number, drag: boolean): void;
+  scroll(dx: number, dy: number): void;
+}
 
-  constructor() {
-    super();
+export class MouseWSChannel extends WSChannel implements MouseInterface {
+
+  constructor(protected listener?: WSChannelListener) {
+    super(listener);
   }
 
-  stateChangeEvent(newState: WSChannelState) {
+  protected stateChangeEvent(newState: WSChannelState) {
     super.stateChangeEvent(newState);
     console.log('state changed', newState);
   }
 
-  messageEvent(m: any) {
+  protected messageEvent(m: any) {
     super.messageEvent(m);
     console.log('message', m)
   }
 
-  reset() {
+  protected reset() {
     super.reset();
   }
 
@@ -25,7 +32,7 @@ export class MouseWSChannel extends WSChannel {
     this.send(`type:click\n\n`);
   }
   
-  button(keyName){
+  button(keyName: string){
     this.send(`type:button\nname:${ keyName }\n\n`);
   }
 

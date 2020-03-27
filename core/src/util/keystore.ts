@@ -6,18 +6,18 @@ export class ClientKeyStore {
 
   constructor(private storeName: string) {}
 
-  add(host: string, key: string) {
-    this.keys.push({ host, key });
+  add(uri: string, key: string) {
+    this.keys.push({ uri: uri, key });
     this.persist();
   }
 
-  getKeyByHost(host: string) {
+  getKeyByUri(uri: string) {
     for (const item of this.keys) {
-      if (item.host === host) {
+      if (item.uri === uri) {
         return item.key;
       }
     }
-    return null;
+    return undefined;
   }
 
   private persist() {

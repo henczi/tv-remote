@@ -1,5 +1,5 @@
 import { WSChannel, WSChannelListener } from "./channel";
-import { pairingTypeString, PairingType } from "./models/pairing-type";
+import { PairingType } from "./models/pairing-type";
 import { defaultPermissions } from "./models/permissions";
 import { WSChannelState } from "./models/channel-state";
 
@@ -39,7 +39,7 @@ export class ServiceWSChannel extends WSChannel {
   private createRequest(request: ClientMessage, handler?: MessageHandler) {
     if (handler) {
       const id = this.createRequestId();
-      request[id] = id;
+      request.id = id;
       this.messageContextMap[id] = {
         request,
         handler
@@ -54,7 +54,7 @@ export class ServiceWSChannel extends WSChannel {
     this.createRequest({
       type: 'register',
       payload: {
-        pairingType: pairingTypeString(pairingType),
+        pairingType: pairingType,
         'client-key': clientKey || undefined,
         manifest: {
           permissions: defaultPermissions
@@ -71,7 +71,7 @@ export class ServiceWSChannel extends WSChannel {
     this.request('ssap://com.webos.service.networkinput/getPointerInputSocket', undefined, handler);
   }
 
-  request(uri: string, payload: object, handler?: MessageHandler) {
+  request(uri: string, payload?: object, handler?: MessageHandler) {
     this.createRequest({ type: 'request', uri, payload }, handler);
   }
 

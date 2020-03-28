@@ -1,6 +1,5 @@
+import WebSocket from '../shared/websocket';
 import { WSChannelState } from "./models/channel-state";
-
-const WSImpl: typeof WebSocket = WebSocket;
 
 export interface WSChannelListener {
   onConnected?: () => void;
@@ -36,12 +35,12 @@ export abstract class WSChannel {
   connect(uri: string) {
     this._hostUri = uri;
     this.disconnect();
-    this._ws = new WSImpl(this._hostUri);
+    this._ws = new WebSocket(this._hostUri);
     this.stateChangeEvent(WSChannelState.Connecting);
-    this._ws.addEventListener('open', () => (this.stateChangeEvent(WSChannelState.Connected), this._listener?.onConnected()));
-    this._ws.addEventListener('close', () => (this.disconnect(), this._listener?.onClosed()));
-    this._ws.addEventListener('error', () => (this.disconnect(), this._listener?.onError()));
-    this._ws.addEventListener('message', (m) => this.messageEvent(m));
+    this._ws.onopen = () => (this.stateChangeEvent(WSChannelState.Connected), this._listener?.onConnected());
+    this._ws.onclose = () => (this.disconnect(), this._listener?.onClosed());
+    this._ws.onerror = () => (this.disconnect(), this._listener?.onError());
+    this._ws.onmessage = (m) => this.messageEvent(m.data);
   }
 
   disconnect() {

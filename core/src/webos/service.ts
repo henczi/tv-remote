@@ -1,6 +1,7 @@
 import { PairingType } from "./models/pairing-type";
 import { ServiceWSChannel, MessageHandler } from "./service-channel";
 import { MouseWSChannel, MouseInterface } from "./mouse-channel";
+import { ButtonHelper } from "./button-helper";
 
 export interface DeviceServiceListener {
   onConnected?: () => void;
@@ -20,10 +21,12 @@ export class DeviceService {
   private mouseChannel = new MouseWSChannel({
     onError: (error) => this.listener?.onError(error),
   });
+  private buttonHelper = new ButtonHelper(this.serviceChannel, this.mouseChannel);
 
   get connectionState() { return this.serviceChannel.state; }
 
   get mouse(): MouseInterface { return this.mouseChannel; }
+  get buttons() { return this.buttonHelper; }
 
   constructor(_listener: DeviceServiceListener) {
     this.listener = _listener;

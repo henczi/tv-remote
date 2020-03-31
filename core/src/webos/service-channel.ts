@@ -90,7 +90,7 @@ export class ServiceWSChannel extends WSChannel {
     const messageContext = message.id && this.messageContextMap[message.id] || undefined;
     switch (message.type) {
       case "error":
-        this.listener?.onError({ message: message.error, context: messageContext });
+        this.listener.onError?.({ message: message.error, context: messageContext });
         if (messageContext) {
           delete this.messageContextMap[message.id];
         }
@@ -98,13 +98,15 @@ export class ServiceWSChannel extends WSChannel {
       case "response":
         if (messageContext) {
           if (messageContext.handler)
-            messageContext.handler(message)
+            messageContext.handler(message, messageContext)
           if (messageContext.request.type !== "subscribe" && messageContext.request.type !== "register")
             delete this.messageContextMap[message.id];
         }
         break;
       case "registered":
         if (messageContext) {
+          if (messageContext.handler)
+            messageContext.handler(message, messageContext)
           delete this.messageContextMap[message.id];
         }
         break;

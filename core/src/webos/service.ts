@@ -14,22 +14,22 @@ export interface DeviceServiceListener {
 export class DeviceService {
   private listener: DeviceServiceListener;
   private serviceChannel = new ServiceWSChannel({
-    onConnected: () => this.listener?.onConnected(),
-    onClosed: () => this.listener?.onDisconnected(),
-    onError: (error) => this.listener?.onError(error),
+    onConnected: () => this.listener.onConnected?.(),
+    onClosed: () => this.listener.onDisconnected?.(),
+    onError: (error) => this.listener.onError?.(error),
   });
   private mouseChannel = new MouseWSChannel({
-    onError: (error) => this.listener?.onError(error),
+    onError: (error) => this.listener.onError?.(error),
   });
-  private buttonHelper = new ButtonHelper(this.serviceChannel, this.mouseChannel);
+  private buttonHelper = new ButtonHelper(this.mouseChannel);
 
   get connectionState() { return this.serviceChannel.state; }
 
   get mouse(): MouseInterface { return this.mouseChannel; }
   get buttons() { return this.buttonHelper; }
 
-  constructor(_listener: DeviceServiceListener) {
-    this.listener = _listener;
+  constructor(listener: DeviceServiceListener) {
+    this.listener = listener || {};
   }
 
   connect(uri: string) {

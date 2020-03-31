@@ -1,4 +1,4 @@
-import WebSocket from '../shared/websocket';
+import Config from './service-config';
 import { WSChannelState } from "./models/channel-state";
 
 export interface WSChannelListener {
@@ -16,7 +16,7 @@ export abstract class WSChannel {
     return this._state;
   }
 
-  constructor(private _listener: WSChannelListener) { }
+  constructor(private _listener: WSChannelListener = {}) { }
 
   protected stateChangeEvent(newState: WSChannelState) {
     console.log('newState: ', newState)
@@ -35,11 +35,11 @@ export abstract class WSChannel {
   connect(uri: string) {
     this._hostUri = uri;
     this.disconnect();
-    this._ws = new WebSocket(this._hostUri);
+    this._ws = new Config.WebSocket(this._hostUri);
     this.stateChangeEvent(WSChannelState.Connecting);
-    this._ws.onopen = () => (this.stateChangeEvent(WSChannelState.Connected), this._listener?.onConnected());
-    this._ws.onclose = () => (this.disconnect(), this._listener?.onClosed());
-    this._ws.onerror = () => (this.disconnect(), this._listener?.onError());
+    this._ws.onopen = () => (this.stateChangeEvent(WSChannelState.Connected), this._listener.onConnected?.());
+    this._ws.onclose = () => (this.disconnect(), this._listener.onClosed?.());
+    this._ws.onerror = () => (this.disconnect(), this._listener.onError?.());
     this._ws.onmessage = (m) => this.messageEvent(m.data);
   }
 

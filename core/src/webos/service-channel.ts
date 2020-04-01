@@ -30,7 +30,7 @@ export class ServiceWSChannel extends WSChannel {
   nextRequestId = 1;
   messageContextMap: { [id: string]: MessageContext } = {};
 
-  constructor(protected listener?: WSChannelListener) {
+  constructor(listener?: WSChannelListener) {
     super(listener);
   }
 
@@ -86,11 +86,16 @@ export class ServiceWSChannel extends WSChannel {
   }
 
   handleMessage(raw: string) {
-    const message = JSON.parse(raw) as ServerMessage;
+    let message;
+    try {
+      message = JSON.parse(raw) as ServerMessage;
+    } catch (err) {
+      this._listener.onError?.(err)
+    }
     const messageContext = message.id && this.messageContextMap[message.id] || undefined;
     switch (message.type) {
       case "error":
-        this.listener.onError?.({ message: message.error, context: messageContext });
+        this._listener.onError?.(<Error>{ name: 'MessageError', message: message.error, context: messageContext });
         if (messageContext) {
           delete this.messageContextMap[message.id];
         }

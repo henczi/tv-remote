@@ -10,7 +10,7 @@ export interface MouseInterface {
 
 export class MouseWSChannel extends WSChannel implements MouseInterface {
 
-  constructor(protected listener?: WSChannelListener) {
+  constructor(listener?: WSChannelListener) {
     super(listener);
   }
 

@@ -16,7 +16,7 @@ export abstract class WSChannel {
     return this._state;
   }
 
-  constructor(private _listener: WSChannelListener = {}) { }
+  constructor(protected _listener: WSChannelListener = {}) { }
 
   protected stateChangeEvent(newState: WSChannelState) {
     console.log('newState: ', newState)
@@ -28,19 +28,29 @@ export abstract class WSChannel {
   }
 
   send(message: string) {
-    if (!this._ws) throw new Error('no socket');
-    this._ws.send(message);
+    if (!this._ws || this._ws.readyState !== this._ws.OPEN) {
+      this._listener.onError?.(new Error('not connected'));
+    }
+    try {
+      this._ws.send(message);
+    } catch (err) {
+      this._listener.onError(err);
+    }
   }
 
   connect(uri: string) {
     this._hostUri = uri;
     this.disconnect();
-    this._ws = new Config.WebSocket(this._hostUri);
-    this.stateChangeEvent(WSChannelState.Connecting);
-    this._ws.onopen = () => (this.stateChangeEvent(WSChannelState.Connected), this._listener.onConnected?.());
-    this._ws.onclose = () => (this.disconnect(), this._listener.onClosed?.());
-    this._ws.onerror = () => (this.disconnect(), this._listener.onError?.());
-    this._ws.onmessage = (m) => this.messageEvent(m.data);
+    try {
+      this._ws = new Config.WebSocket(this._hostUri);
+      this.stateChangeEvent(WSChannelState.Connecting);
+      this._ws.onopen = () => (this.stateChangeEvent(WSChannelState.Connected), this._listener.onConnected?.());
+      this._ws.onclose = () => (this.disconnect(), this._listener.onClosed?.());
+      this._ws.onerror = () => (this.disconnect(), this._listener.onError?.());
+      this._ws.onmessage = (m) => this.messageEvent(m.data);
+    } catch (err) {
+      return this._listener.onError?.(err);
+    }
   }
 
   disconnect() {

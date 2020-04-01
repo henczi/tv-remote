@@ -23,8 +23,6 @@ export class DeviceService {
   });
   private buttonHelper = new ButtonHelper(this.mouseChannel);
 
-  get connectionState() { return this.serviceChannel.state; }
-
   get mouse(): MouseInterface { return this.mouseChannel; }
   get buttons() { return this.buttonHelper; }
 

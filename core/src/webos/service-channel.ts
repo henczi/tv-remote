@@ -1,7 +1,6 @@
 import { WSChannel, WSChannelListener } from "./channel";
 import { PairingType } from "./models/pairing-type";
 import { defaultPermissions } from "./models/permissions";
-import { WSChannelState } from "./models/channel-state";
 
 export interface MessageHandler {
   (response: ServerMessage, context?: MessageContext): void;
@@ -119,10 +118,6 @@ export class ServiceWSChannel extends WSChannel {
         console.log('Unhandled message', message);
         break;
     }
-  }
-
-  protected stateChangeEvent(newState: WSChannelState) {
-    super.stateChangeEvent(newState);
   }
 
   protected messageEvent(m: any) {

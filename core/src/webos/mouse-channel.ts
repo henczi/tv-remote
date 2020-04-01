@@ -1,5 +1,4 @@
 import { WSChannel, WSChannelListener } from "./channel";
-import { WSChannelState } from "./models/channel-state";
 
 export interface MouseInterface {
   click(): void;
@@ -12,11 +11,6 @@ export class MouseWSChannel extends WSChannel implements MouseInterface {
 
   constructor(listener?: WSChannelListener) {
     super(listener);
-  }
-
-  protected stateChangeEvent(newState: WSChannelState) {
-    super.stateChangeEvent(newState);
-    console.log('state changed', newState);
   }
 
   protected messageEvent(m: any) {

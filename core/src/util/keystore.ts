@@ -1,23 +1,24 @@
 import { PersistentWebStore } from "./store";
 
+export interface ClientKeyStoreItem {
+  name: string;
+  uri: string;
+  key: string;
+}
+
 export class ClientKeyStore {
-  store = new PersistentWebStore(this.storeName);
-  keys = this.store.get() || [];
+  private store = new PersistentWebStore(this.storeName);
+  private keys: ClientKeyStoreItem[] = this.store.get() || [];
 
   constructor(private storeName: string) {}
 
-  add(uri: string, key: string) {
-    this.keys.push({ uri: uri, key });
+  add(name: string, uri: string, key: string) {
+    this.keys.push({ name, uri, key });
     this.persist();
   }
 
-  getKeyByUri(uri: string) {
-    for (const item of this.keys) {
-      if (item.uri === uri) {
-        return item.key;
-      }
-    }
-    return undefined;
+  list() {
+    return this.keys;
   }
 
   private persist() {

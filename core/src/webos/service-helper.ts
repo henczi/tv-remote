@@ -1,6 +1,6 @@
 import { ServiceWSChannel } from "./service-channel";
 
-export class KeyboardHelper {
+export class ServiceHelper {
   constructor(private service: ServiceWSChannel) {}
 
   powerOff() {

@@ -34,7 +34,7 @@ export abstract class WSChannel {
       this._ws = new Config.WebSocket(this._hostUri);
       this._ws.onopen = () => (this._listener.onConnected?.());
       this._ws.onclose = () => (this.disconnect(), this._listener.onClosed?.());
-      this._ws.onerror = () => (this.disconnect(), this._listener.onError?.());
+      this._ws.onerror = () => (this.disconnect(), this._listener.onError?.(new Error('socket error')));
       this._ws.onmessage = (m) => this.messageEvent(m.data);
     } catch (err) {
       return this._listener.onError?.(err);

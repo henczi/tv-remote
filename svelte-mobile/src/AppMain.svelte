@@ -1,33 +1,82 @@
 <script>
   import {
+    f7,
+    f7ready,
     App,
     View,
     Page,
-    Icon,
     Navbar,
-    Block,
-    Button,
-    Row,
-    Col
+    Link,
+    Toolbar,
+    Tabs,
+    Tab
   } from "framework7-svelte";
+  import { onMount } from "svelte";
+  import remote from './remote-controller';
   import AspectRatio from "./components/AspectRatio.svelte";
   import FlexFill from "./components/FlexFill.svelte";
   import IconButton from "./components/IconButton.svelte";
-  import NumpadModal from "./components/NumpadModal.svelte";
   import KeyboardModal from "./components/KeyboardModal.svelte";
+  import SettingsModal from "./components/SettingsModal.svelte";
+  import ConnectModal from "./components/ConnectModal.svelte";
+  import MouseController from "./components/MouseController.svelte";
+  import TabHome from "./TabHome.svelte";
+  import TabNumpad from "./TabNumpad.svelte";
+  import TabChannels from "./TabChannels.svelte";
+  import TabLaunch from "./TabLaunch.svelte";
   export let title;
-  let numpad;
-  let keyboard;
+  let settings;
+  let connect;
+  let ok = false;
+
+  remote.onconnecting = function() {
+    showLoading();
+  }
+
+  remote.ondisconnected = function() {
+    hideLoading();
+    connect.open();
+  }
+
+  remote.onready = function() {
+    hideLoading();
+    connect.close();
+  }
+
+  remote.onerror = function(err) {
+    f7.toast.create({
+      text: err.message || 'Hiba!',
+      position: 'bottom',
+      closeTimeout: 2000,
+      closeButton: true,
+    }).open();
+  }
+
+  function showLoading() {
+    f7.dialog.preloader('Connecting...')
+  }
+
+  function hideLoading() {
+    f7.dialog.close()
+  }
+
+  function powerOff() {
+    f7.dialog.confirm(
+      'Biztosan kikapcsolja a készüléket?',
+      'Kikapcsolás',
+      () => { console.log('OFF') },
+      () => {}
+    )
+  }
+  onMount(() => {
+    f7ready(() => {
+      remote.init();
+    })
+  })
 </script>
 
 <style>
-:global(.page-content) {
-  display: flex;
-  flex-direction: column;
-}
-:global(.page-content > .row) {
-  margin-top: auto;
-}
+
 </style>
 
 <App>
@@ -35,89 +84,38 @@
     <Page>
       <Navbar {title}>
         <div slot="left">
-          <IconButton color="red" icon="power" />
+          <IconButton color="red" icon="power" on:click={powerOff} />
         </div>
         <div slot="right">
-          <IconButton color="gray" icon="gear" />
+          <FlexFill>
+            <IconButton icon="bolt_slash_fill" on:click={() => remote.disconnect()} />
+            <IconButton color="gray" icon="gear" on:click={() => settings.open()} />
+          </FlexFill>
         </div>
       </Navbar>
-      <Row noGap>
-        <Col width={66} large={33}>
-          <Row>
-            <Col width={100}>
-              <AspectRatio ratio={1}>
-                <FlexFill vertical>
-                  <FlexFill>
-                    <IconButton icon="house" secondaryBtn />
-                    <IconButton icon="chevron_compact_up" />
-                    <IconButton icon="globe" secondaryBtn />
-                  </FlexFill>
-                  <FlexFill>
-                    <IconButton icon="chevron_compact_left" />
-                    <IconButton icon="square" />
-                    <IconButton icon="chevron_compact_right" />
-                  </FlexFill>
-                  <FlexFill>
-                    <IconButton icon="arrow_turn_down_left" secondaryBtn />
-                    <IconButton icon="chevron_compact_down" />
-                    <IconButton icon="square_arrow_left" secondaryBtn />
-                  </FlexFill>
-                </FlexFill>
-              </AspectRatio>
-            </Col>
-            <Col width={100}>
-              <AspectRatio ratio={3}>
-                <FlexFill>
-                  <IconButton flexBasis={1} icon="tv" />
-                  <IconButton
-                    flexBasis={1}
-                    icon="keyboard"
-                    on:click={() => keyboard.open()} />
-                  <IconButton flexBasis={1} icon="rocket" />
-                </FlexFill>
-              </AspectRatio>
-            </Col>
-          </Row>
-        </Col>
-        <Col width={33}>
-          <Row>
-            <Col width={100} large={50}>
-              <AspectRatio ratio={1 / 2}>
-                <FlexFill vertical>
-                  <IconButton flexBasis={5} icon="chevron_up" />
-                  <IconButton flexBasis={1} icon="info" secondaryBtn />
-                  <IconButton flexBasis={5} icon="chevron_down" />
-                </FlexFill>
-              </AspectRatio>
-            </Col>
-            <Col width={100} large={50}>
-              <AspectRatio ratio={1 / 2}>
-                <FlexFill vertical>
-                  <IconButton flexBasis={5} icon="plus" />
-                  <IconButton flexBasis={1} icon="speaker_slash" secondaryBtn />
-                  <IconButton flexBasis={5} icon="minus" />
-                </FlexFill>
-              </AspectRatio>
-            </Col>
-          </Row>
-        </Col>
-        <Col width={100}>
-          <hr />
-          <AspectRatio ratio={8}>
-            <FlexFill>
-              <IconButton
-                flexBasis={1}
-                icon="number"
-                on:click={() => numpad.open()} />
-              <IconButton flexBasis={1} icon="gear_alt" />
-              <IconButton flexBasis={1} icon="star" />
-              <IconButton flexBasis={1} icon="play_rectangle_fill" />
-            </FlexFill>
-          </AspectRatio>
-        </Col>
-      </Row>
+      <Toolbar tabbar labels bottom>
+        <Link tabLink="#tabHome" text="Home" iconF7="house" tabLinkActive />
+        <Link tabLink="#tabNumpad" text="Numpad" iconF7="number" />
+        <Link tabLink="#tabChannels" text="Channels" iconF7="tv" />
+        <Link tabLink="#tabLaunch" text="Launch" iconF7="rocket" />
+      </Toolbar>
+      <Tabs>
+        <Tab id="tabHome" tabActive>
+          <TabHome />
+        </Tab>
+        <Tab id="tabNumpad">
+          <TabNumpad />
+        </Tab>
+        <Tab id="tabChannels">
+          <TabChannels />
+        </Tab>
+        <Tab id="tabLaunch">
+          <TabLaunch />
+        </Tab>
+      </Tabs>
     </Page>
-    <NumpadModal bind:this={numpad} />
-    <KeyboardModal bind:this={keyboard} />
+    <KeyboardModal />
+    <SettingsModal bind:this={settings} />
+    <ConnectModal bind:this={connect} />
   </View>
 </App>

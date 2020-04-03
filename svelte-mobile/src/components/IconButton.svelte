@@ -5,6 +5,7 @@
   export let color = "blue";
   export let secondaryBtn = false;
   export let flexBasis = 1;
+  export let disabled = false;
 </script>
 
 <style>
@@ -24,7 +25,7 @@
 </style>
 
 <div class="btn" style="--flex-basis: {flexBasis}rem">
-  <Button class="button-element {secondaryBtn ? 'secondary-btn-icon' : ''}" iconF7={icon} iconColor={color} light on:click>
+  <Button {disabled} class="button-element {secondaryBtn ? 'secondary-btn-icon' : ''}" iconF7={icon} iconColor={color} light on:click>
     {content}
   </Button>
 </div>

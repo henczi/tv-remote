@@ -8,6 +8,8 @@ import { KeyboardHelper } from "./keyboard-helper";
 export interface DeviceServiceListener {
   onConnected?: () => void;
   onDisconnected?: () => void;
+  onMouseConnected?: () => void;
+  onMouseDisconnected?: () => void;
   onPairing?: (pairingType: PairingType, setPin: (pin: string) => void) => void;
   onRegistered?: (clientKey?: string) => void;
   onError?: (error: any) => void;
@@ -21,6 +23,8 @@ export class DeviceService {
     onError: (error) => this.listener.onError?.(error),
   });
   private mouseChannel = new MouseWSChannel({
+    onConnected: () => this.listener.onMouseConnected?.(),
+    onClosed: () => this.listener.onMouseDisconnected?.(),
     onError: (error) => this.listener.onError?.(error),
   });
   private _buttonHelper = new ButtonHelper(this.mouseChannel);

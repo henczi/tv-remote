@@ -29,4 +29,19 @@ export class ButtonHelper {
   dash() { this.mouse.button('DASH'); }
   enter() { this.mouse.button('ENTER'); }
 
+  volumeUp() { this.mouse.button('VOLUMEUP'); }
+  volumeDown() { this.mouse.button('VOLUMEDOWN'); }
+  channelUp() { this.mouse.button('CHANNELUP'); }
+  channelDown() { this.mouse.button('CHANNELDOWN'); }
+
+  mute() { this.mouse.button('MUTE'); }
+
+  info() { this.mouse.button('INFO'); }
+  list() { this.mouse.button('LIST'); }
+  menu() { this.mouse.button('MENU'); }
+  qmenu() { this.mouse.button('QMENU'); }
+
+  ad() { this.mouse.button('AD'); }
+  guide() { this.mouse.button('GUIDE'); }
+
 }

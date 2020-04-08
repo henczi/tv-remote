@@ -15,6 +15,7 @@
   } from "framework7-svelte";
   import { onMount } from "svelte";
   import remote from "./remote-controller";
+  import { keyboard } from "./bridge";
   import AspectRatio from "./components/AspectRatio.svelte";
   import FlexFill from "./components/FlexFill.svelte";
   import IconButton from "./components/IconButton.svelte";
@@ -77,6 +78,18 @@
     remote.device.service.listLaunchPoints(
       x => (launchPoints = x.launchPoints)
     );
+    remote.device.service.subscribeKeyboard(e => keyboardStateChangeHandler(e))
+  }
+
+  function keyboardStateChangeHandler(event) {
+    if (event.focusChanged) {
+      if (event.currentWidget.focus) {
+        keyboard.open()
+      }
+      else {
+        keyboard.close();
+      }
+    }
   }
 
   function powerOff() {

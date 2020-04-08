@@ -43,7 +43,9 @@
     </Navbar>
     <Block>
       <List inset>
-        <ListInput value={hostname} on:input={(e) => hostname = e.detail[0].target.value} type="text" placeholder="Connect to ... (192.168.0.100)" />
+        <ListInput input={false}>
+          <input slot="input" type="text" bind:value={hostname} placeholder="Connect to ... (192.168.0.100)" />
+        </ListInput>
       </List>
       <Button on:click={connect}>Connect</Button>
 

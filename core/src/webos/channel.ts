@@ -13,7 +13,7 @@ export abstract class WSChannel {
   constructor(protected _listener: WSChannelListener = {}) { }
 
   protected messageEvent(m: any) { 
-    console.log('message: ', m)
+    // console.log('message: ', m)
   }
 
   send(message: string) {

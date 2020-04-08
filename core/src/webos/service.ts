@@ -52,7 +52,7 @@ export class DeviceService {
           this.serviceChannel.registerPin(pin);
         });
       } else {
-        this.listener.onRegistered();
+        this.listener.onRegistered(response.payload['client-key']);
       }
     });
   }

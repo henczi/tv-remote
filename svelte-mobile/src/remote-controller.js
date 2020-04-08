@@ -36,8 +36,9 @@ class RemoteController {
           setpin(prompt('Pin?'))
       },
       onRegistered: (clientKey) => {
+        this.destination.key = clientKey;
         if (this.destination.save) {
-          this.keyStore.add(this.destination.name, this.destination.uri, clientKey);
+          this.keyStore.addOrUpdate(this.destination.name, this.destination.uri, clientKey);
         }
         this.lastConnected.set(this.destination);
         webosService.connectMouse();
@@ -55,10 +56,26 @@ class RemoteController {
   }
 
   listConnections() {
-    return this.keyStore.list();
+    return this.keyStore.listItems();
+  }
+
+  removeSelected(name) {
+    this.keyStore.removeByName(name);
+  }
+
+  connectToSelected(name) {
+    const el = this.keyStore.getByName(name)
+    if (el) {
+      this.destination = el;
+      this.connect();
+    }
   }
 
   connectTo(uri, name) {
+    if (name != null && this.keyStore.containsName(name)) {
+      if (this.onerror) this.onerror(new Error('Name is already in use!'));
+      return;
+    }
     this.destination = { uri, name, save: name != null };
     this.connect();
   }
@@ -74,11 +91,11 @@ class RemoteController {
   connect() {
     if (this.onconnecting) this.onconnecting();
     this.device.connect(this.destination.uri);
-    this.connectTimeout = setTimeout(() => this.disconnect(), 3500);
+    this.connectTimeout = setTimeout(() => this.disconnect(false), 3500);
   }
 
-  disconnect() {
-    this.autoReconnect.set(false)
+  disconnect(disableAutoReconnect = true) {
+    if (disableAutoReconnect) this.autoReconnect.set(false)
     this.device.disconnect();
   }
 }

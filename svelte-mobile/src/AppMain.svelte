@@ -98,7 +98,7 @@
       "Kikapcsolás",
       () => {
         remote.device.service.powerOff();
-        remote.disconnect();
+        remote.disconnect(false);
       },
       () => {}
     );

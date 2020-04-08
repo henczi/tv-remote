@@ -22,6 +22,14 @@ class RemoteController {
         this.destination = null;
         if (this.ondisconnected) this.ondisconnected();
       },
+      onMouseConnected: () => {
+        console.log('mouse:connected')
+        if (this.onready) this.onready();
+      },
+      onMouseDisconnected: () => {
+        console.log('mouse:disconnected')
+        this.disconnect();
+      },
       onPairing: (type, setpin) => {
         console.log('pairing', type);
         if (type == "PIN")
@@ -32,8 +40,7 @@ class RemoteController {
           this.keyStore.add(this.destination.name, this.destination.uri, clientKey);
         }
         this.lastConnected.set(this.destination);
-        webosService.connectMouse(); // TODO: integrate flow
-        if (this.onready) this.onready();
+        webosService.connectMouse();
       },
       onError: (err) => {
         console.log('error', err)

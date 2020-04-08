@@ -1,6 +1,7 @@
 <script>
   import {
     Navbar,
+    Page,
     Block,
     Link,
     Popup,
@@ -17,20 +18,20 @@
 
   keyboard.open = function() {
     opened = true;
-  }
+  };
   keyboard.close = function() {
     opened = false;
-  }
+  };
 </script>
 
 <Popup push {opened}>
-  <Navbar title="Keyboard">
-    <div slot="left">
-    </div>
-    <div slot="right">
-      <Link on:click={keyboard.close}>Close</Link>
-    </div>
-  </Navbar>
+  <Page>
+    <Navbar title="Keyboard">
+      <div slot="left" />
+      <div slot="right">
+        <Link on:click={keyboard.close}>Close</Link>
+      </div>
+    </Navbar>
     <Block>
       <List inset>
         <ListInput type="text" placeholder="Text" />
@@ -39,4 +40,5 @@
         <Icon f7="chevron_down" />
       </Button>
     </Block>
+  </Page>
 </Popup>

@@ -62,7 +62,10 @@
               <IconButton
                 icon="chevron_compact_down"
                 on:click={() => remote.device.buttons.down()} />
-              <IconButton icon="square_arrow_left" secondaryBtn />
+              <IconButton
+                icon="square_arrow_left"
+                secondaryBtn
+                on:click={() => remote.device.buttons.exit()} />
             </FlexFill>
           </FlexFill>
         </AspectRatio>
@@ -70,7 +73,10 @@
       <Col width={100}>
         <AspectRatio ratio={3}>
           <FlexFill>
-            <IconButton flexBasis={1} icon="gear_alt" />
+            <IconButton
+              flexBasis={1}
+              icon="gear_alt"
+              on:click={() => remote.device.buttons.menu()} />
             <IconButton
               flexBasis={1}
               icon="keyboard"
@@ -92,12 +98,16 @@
             <IconButton
               flexBasis={5}
               icon="chevron_up"
-              on:click={() => remote.device.service.channelUp()} />
-            <IconButton flexBasis={1} icon="info" secondaryBtn />
+              on:click={() => remote.device.buttons.channelUp()} />
+            <IconButton
+              flexBasis={1}
+              icon="info"
+              secondaryBtn
+              on:click={() => remote.device.buttons.info()} />
             <IconButton
               flexBasis={5}
               icon="chevron_down"
-              on:click={() => remote.device.service.channelDown()} />
+              on:click={() => remote.device.buttons.channelDown()} />
           </FlexFill>
         </AspectRatio>
       </Col>
@@ -107,12 +117,16 @@
             <IconButton
               flexBasis={5}
               icon="plus"
-              on:click={() => remote.device.service.volumeUp()} />
-            <IconButton flexBasis={1} icon="speaker_slash" secondaryBtn />
+              on:click={() => remote.device.buttons.volumeUp()} />
+            <IconButton
+              flexBasis={1}
+              icon="speaker_slash"
+              secondaryBtn
+              on:click={() => remote.device.buttons.mute()} />
             <IconButton
               flexBasis={5}
               icon="minus"
-              on:click={() => remote.device.service.volumeDown()} />
+              on:click={() => remote.device.buttons.volumeDown()} />
           </FlexFill>
         </AspectRatio>
       </Col>

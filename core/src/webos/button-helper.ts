@@ -44,4 +44,6 @@ export class ButtonHelper {
   ad() { this.mouse.button('AD'); }
   guide() { this.mouse.button('GUIDE'); }
 
+  exit() { this.mouse.button('EXIT'); }
+
 }

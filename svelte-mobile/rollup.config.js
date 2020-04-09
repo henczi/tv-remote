@@ -42,7 +42,7 @@ export default {
 							const destpath = path.join(__dirname, 'public', 'build', 'fonts', fileName);
 							if (!fs.pathExistsSync(destpath))
 								fs.copySync(assetAbsolutePath, destpath)
-							return `/build/fonts/${fileName}`
+							return `fonts/${fileName}`
 						},
 					}
 				]),

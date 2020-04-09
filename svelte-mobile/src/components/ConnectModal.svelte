@@ -20,7 +20,7 @@
   let opened;
 
   let saveConnection = false;
-  let hostname = "LGwebOSTV";
+  let hostname = "LGwebOSTV.local";
   let name = "";
 
   let list = [];

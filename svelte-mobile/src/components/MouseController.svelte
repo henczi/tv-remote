@@ -33,15 +33,23 @@
     });
     let sendMove = false;
     let moveData = null;
+    let moveStartTS = 0;
     function doSendMove() {
-      if (!sendMove || !moveData) return; 
+      if (!sendMove || !moveData) return;
       const dx = moveData.vector.x * 2.5 * moveData.force;
       const dy = moveData.vector.y * 2.5 * moveData.force;
       remote.device.mouse.move(dx, -dy);
       setTimeout(doSendMove, 20);
     }
-    moveJoystick.on('end', () => ((!sendMove && webosService.mouse.click()),  sendMove = false));
-    moveJoystick.on('move', (event, data) => (moveData = data, sendMove || setTimeout(() => doSendMove(sendMove = true))));
+    function moveEnd() {
+      const now = (new Date()).getTime();
+      if (now - moveStartTS < 100) {
+        remote.device.mouse.click();
+      }
+    }
+    moveJoystick.on('end', () => (sendMove = false, moveEnd()));
+    moveJoystick.on('move', (event, data) => (moveData = data, sendMove || (sendMove = true, setTimeout(() => doSendMove()))));
+    moveJoystick.on('start', () => moveStartTS = (new Date()).getTime());
   });
 </script>
 

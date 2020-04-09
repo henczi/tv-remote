@@ -1,0 +1,7 @@
+/* PWA - disable body scroll */
+body {
+	overflow: hidden!important;
+	position: fixed!important;
+	top: 0!important;
+	width: 100%!important;
+}
